@@ -8,10 +8,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    container:
-      image: ghcr.io/kivy/buildozer:latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias del sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev cmake libffi-dev libssl-dev automake build-essential
+
+      - name: Instalar Buildozer
+        run: pip install --upgrade buildozer cython
 
       - name: Build con Buildozer
         run: yes | buildozer -v android debug
