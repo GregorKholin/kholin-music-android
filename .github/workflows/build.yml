@@ -20,18 +20,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev cmake libffi-dev libssl-dev automake build-essential
 
-      - name: Sacar del disco los Python mas nuevos precacheados
-        # El runner trae varias versiones de Python en /opt/hostedtoolcache/Python
-        # (3.10, 3.11, 3.12, 3.13, 3.14...). Algo en python-for-android escanea esa
-        # carpeta y agarra la mas nueva (3.14) en vez de la que realmente esta
-        # activa (3.11), y eso rompe la instalacion de wheels para Android.
-        # Borrando las mas nuevas que 3.11 no queda con que confundirse.
-        run: |
-          sudo rm -rf /opt/hostedtoolcache/Python/3.12.* /opt/hostedtoolcache/Python/3.13.* /opt/hostedtoolcache/Python/3.14.* 2>/dev/null || true
-          ls /opt/hostedtoolcache/Python
-
       - name: Instalar Buildozer
-        run: pip install "buildozer==1.5.0" "cython<3.1" "python-for-android==2023.9.16"
+        # Ojo: el "python-for-android" que se instala acá con pip casi no se usa.
+        # Buildozer clona su PROPIA copia de python-for-android desde GitHub
+        # (rama definida por "p4a.branch" en buildozer.spec) dentro de
+        # .buildozer/android/platform/, y usa esa, no la de pip. El pin real
+        # que importa esta en buildozer.spec (p4a.branch = v2023.09.16).
+        run: pip install "buildozer==1.5.0" "cython<3.1"
 
       - name: Build con Buildozer
         run: yes | buildozer -v android debug
