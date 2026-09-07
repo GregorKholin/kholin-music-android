@@ -1,4 +1,8 @@
 .buildozer/
 bin/
+bin_descargado/
 *.pyc
 __pycache__/
+*.apk
+*.rar
+*.zip
