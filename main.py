@@ -17,11 +17,24 @@ import db
 import scanner
 
 if platform == "android":
-    from android.permissions import Permission, request_permissions
-    request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
     CARPETA_MUSICA = "/storage/emulated/0/Music/KholinMusic"
 else:
     CARPETA_MUSICA = os.path.join(os.path.expanduser("~"), "KholinMusicTest")
+
+
+def _pedir_permisos_android():
+    # OJO: pedir permisos acá (a nivel de módulo, antes de que la Activity de
+    # Android termine de arrancar) es lo que hacía que la app se cerrara sola
+    # apenas se abría: request_permissions() necesita una Activity ya lista,
+    # y si se llama demasiado pronto tira una excepción no capturada que
+    # mata la app antes de que se vea la ventana de Kivy. Por eso esto se
+    # llama recién en build(), con un pequeño delay.
+    from android.permissions import Permission, request_permissions
+    permisos = [Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE]
+    permiso_media_audio = getattr(Permission, "READ_MEDIA_AUDIO", None)
+    if permiso_media_audio:
+        permisos.append(permiso_media_audio)
+    request_permissions(permisos)
 
 KV = """
 <FilaCancion>:
@@ -204,6 +217,11 @@ class KholinMusicApp(App):
         self.filas_widgets = []
         root = RootWidget()
         self.root_widget = root
+        if platform == "android":
+            try:
+                _pedir_permisos_android()
+            except Exception:
+                pass
         Clock.schedule_once(lambda dt: self.cargar_biblioteca(), 0.3)
         Clock.schedule_interval(self._chequear_fin_cancion, 0.5)
         return root
